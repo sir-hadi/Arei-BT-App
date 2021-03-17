@@ -8,14 +8,46 @@ import android.os.Looper
 import android.os.Message
 import android.util.Log
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.android.araibtv03.entities.ItemDataHolder
 import kotlinx.android.synthetic.main.activity_inventory_list.*
 import org.jetbrains.anko.toast
 import java.util.*
 import kotlin.collections.ArrayList
 
 class InventoryList : AppCompatActivity() {
-    val exampleList = generateDummyList(3)
-    var adapter = InventoryAdapter(exampleList)
+    var predefineData = arrayListOf(
+            ItemDataHolder(R.drawable.ic_android,"Sepatu Hiking",false),
+            ItemDataHolder(R.drawable.ic_android,"Gaiter",false),
+            ItemDataHolder(R.drawable.ic_android,"Sleeping Bag",false),
+            ItemDataHolder(R.drawable.ic_android,"Jaket",false),
+            ItemDataHolder(R.drawable.ic_android,"Jas Hujan",false),
+            ItemDataHolder(R.drawable.ic_android,"Tenda",false),
+            ItemDataHolder(R.drawable.ic_android,"Kompor Kecil",false),
+            ItemDataHolder(R.drawable.ic_android,"Gas Kaleng",false),
+            ItemDataHolder(R.drawable.ic_android,"Pisau Masak",false),
+            ItemDataHolder(R.drawable.ic_android,"Gunting",false),
+            ItemDataHolder(R.drawable.ic_android,"Sendok",false),
+            ItemDataHolder(R.drawable.ic_android,"Garpu",false),
+            ItemDataHolder(R.drawable.ic_android,"Pakaian Ganti Kering 1",false),
+            ItemDataHolder(R.drawable.ic_android,"Pakaian Ganti Kering 2",false),
+            ItemDataHolder(R.drawable.ic_android,"Pakaian Ganti Kering 3",false),
+            ItemDataHolder(R.drawable.ic_android,"Pakaian Ganti Kering 4",false),
+            ItemDataHolder(R.drawable.ic_android,"Peralatan Medis",false),
+            ItemDataHolder(R.drawable.ic_android,"Kaos Kaki",false),
+            ItemDataHolder(R.drawable.ic_android,"Matras",false),
+            ItemDataHolder(R.drawable.ic_android,"Senter",false),
+            ItemDataHolder(R.drawable.ic_android,"Kompas",false),
+            ItemDataHolder(R.drawable.ic_android,"Trash bag",false),
+            ItemDataHolder(R.drawable.ic_android,"Sandal Jepit",false),
+            ItemDataHolder(R.drawable.ic_android,"Celana Panjang 1",false),
+            ItemDataHolder(R.drawable.ic_android,"Celana Panjang 2",false),
+            ItemDataHolder(R.drawable.ic_android,"Topi",false),
+            ItemDataHolder(R.drawable.ic_android,"Tali",false),
+            ItemDataHolder(R.drawable.ic_android,"Powerbank",false),
+            ItemDataHolder(R.drawable.ic_android,"Pisau Lipat",false),
+            ItemDataHolder(R.drawable.ic_android,"Peta Jalur",false)
+    )
+    lateinit var adapter: InventoryAdapter
 
     companion object{
         lateinit var deviceAddress:String
@@ -51,11 +83,18 @@ class InventoryList : AppCompatActivity() {
 //    val charWrite = "0000fff2-0000-1000-8000-00805f9b34fb"
 
     var toggleListeningMode = true
+
+    lateinit var dao: ItemDao
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_inventory_list)
-        items = ArrayList()
+
+        dao = ItemDatabase.getInstance(this).itemDao()
+        predefineData.forEach { dao.insertItem(it) }
+        predefineData = dao.getAll() as ArrayList<ItemDataHolder>
+
+        adapter = InventoryAdapter(predefineData)
         deviceAddress = intent.getStringExtra(ScanDevice.EXTRA_ADDRESS)
         recycler_view.adapter = adapter
         recycler_view.layoutManager = LinearLayoutManager(this)
@@ -76,8 +115,10 @@ class InventoryList : AppCompatActivity() {
             writeCharacteristic(writeChar!!,payload)
         }
 
+
+
         force_read.setOnClickListener(){
-            readDataRecive(bluetoothGatt)
+            addItem("New Item ${dummyNum++}")
         }
 //        readingsThread().start()
 
@@ -276,7 +317,8 @@ class InventoryList : AppCompatActivity() {
             item,
             true
         )
-        exampleList.add(0,newItem)
+        dao.insertItem(newItem)
+        predefineData.add(0,newItem)
         adapter.notifyItemInserted(0)
         recycler_view.smoothScrollToPosition(0);
     }
@@ -392,7 +434,6 @@ class InventoryList : AppCompatActivity() {
         } ?: error("Not connected to a BLE device!")
     }
 
-
     private fun BluetoothGatt.printGattTable() {
         if (services.isEmpty()) {
             Log.i("printGattTable", "No service and characteristic available, call discoverServices() first?")
@@ -449,16 +490,6 @@ class InventoryList : AppCompatActivity() {
     //////////////////////////////////////
     ///      List RecycleView FUnc     ///
     //////////////////////////////////////
-    fun insertItem() {
-        val newItem = ItemDataHolder(
-            R.drawable.ic_android,
-            "New item at position huraa",
-            true
-        )
-        exampleList.add(0,newItem)
-        adapter.notifyItemInserted(0)
-        recycler_view.smoothScrollToPosition(0);
-    }
 
 
     private fun generateDummyList(size: Int): ArrayList<ItemDataHolder> {
